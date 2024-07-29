@@ -1,0 +1,1311 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>server: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">tezos-delegation-service/cmd/server/main.go (0.0%)</option>
+				
+				<option value="file1">tezos-delegation-service/config/config.go (69.6%)</option>
+				
+				<option value="file2">tezos-delegation-service/internal/api/handlers/delegation.go (75.0%)</option>
+				
+				<option value="file3">tezos-delegation-service/internal/api/openapi.gen.go (47.6%)</option>
+				
+				<option value="file4">tezos-delegation-service/internal/api/router/router.go (100.0%)</option>
+				
+				<option value="file5">tezos-delegation-service/internal/api/server/server.go (100.0%)</option>
+				
+				<option value="file6">tezos-delegation-service/internal/app/app.go (0.0%)</option>
+				
+				<option value="file7">tezos-delegation-service/internal/db/db.go (50.0%)</option>
+				
+				<option value="file8">tezos-delegation-service/internal/db/postgres.go (82.2%)</option>
+				
+				<option value="file9">tezos-delegation-service/internal/db/queries.sql.go (0.0%)</option>
+				
+				<option value="file10">tezos-delegation-service/internal/middleware/circuitbreaker.go (0.0%)</option>
+				
+				<option value="file11">tezos-delegation-service/internal/middleware/cors.go (28.6%)</option>
+				
+				<option value="file12">tezos-delegation-service/internal/middleware/logger.go (20.0%)</option>
+				
+				<option value="file13">tezos-delegation-service/internal/middleware/ratelimiter.go (50.0%)</option>
+				
+				<option value="file14">tezos-delegation-service/internal/middleware/retrier.go (0.0%)</option>
+				
+				<option value="file15">tezos-delegation-service/internal/parser/parser.go (79.6%)</option>
+				
+				<option value="file16">tezos-delegation-service/internal/poller/poller.go (2.2%)</option>
+				
+				<option value="file17">tezos-delegation-service/logger/logger.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "context"
+        "os"
+        "os/signal"
+        "syscall"
+        "time"
+
+        "tezos-delegation-service/internal/app"
+        "tezos-delegation-service/logger"
+)
+
+func main() <span class="cov0" title="0">{
+        // Run the main application logic and handle any errors
+        if err := run(); err != nil </span><span class="cov0" title="0">{
+                // Exit with status code 1 on error
+                os.Exit(1)
+        }</span>
+}
+
+// run initializes the application, starts it, and handles graceful shutdown.
+func run() error <span class="cov0" title="0">{
+        // Initialize the logger
+        log := logger.NewLogger()
+
+        // Create a new application instance
+        app := app.NewApp()
+
+        // Create a context that listens for OS interrupts and SIGTERM signals
+        ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+        defer cancel()
+
+        // Start the application and handle any startup errors
+        if err := app.Start(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Log.Fatal().Err(err).Msg("Failed to start the application")
+                return err
+        }</span>
+
+        // Wait for the context to be done (e.g., signal received)
+        <span class="cov0" title="0">&lt;-ctx.Done()
+        log.Log.Info().Msg("Shutting down gracefully, press Ctrl+C again to force")
+
+        // Create a new context with a timeout for graceful shutdown
+        ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        // Stop the application and handle any shutdown errors
+        if err := app.Stop(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Log.Fatal().Err(err).Msg("Failed to stop the application")
+                return err
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package config
+
+import (
+        "log"
+        "os"
+        "path/filepath"
+        "runtime"
+
+        "github.com/spf13/viper"
+)
+
+type Config struct {
+        //Environment string `mapstructure:"ENVIRONMENT"`
+        //Host        string `mapstructure:"HOST"`
+
+        DBUsername      string `mapstructure:"DB_USERNAME"`
+        DBPassword      string `mapstructure:"DB_PASSWORD"`
+        DBHost          string `mapstructure:"DB_HOST"`
+        DBPort          string `mapstructure:"DB_PORT"`
+        DBName          string `mapstructure:"DB_NAME"`
+        TezosAPIURL     string `mapstructure:"TEZOS_API_URL"`
+        PollingInterval string `mapstructure:"POLLING"`
+        Port            string `mapstructure:"PORT"`
+        RateLimit       int    `mapstructure:"RATE_LIMIT"`
+        MigrationPath   string `mapstructure:"MIGRATION_PATH"`
+        //DBNameTest    string `mapstructure:"DB_DBNAME_TEST"`
+        DBRecreate bool `mapstructure:"DB_RECREATE"`
+}
+
+func LoadConfig() (config *Config) <span class="cov8" title="1">{
+        rootPath, _ := GetRootPath()
+
+        viper.SetConfigFile(filepath.Join(rootPath, ".env"))
+
+        //viper.AutomaticEnv()
+
+        if err := viper.ReadInConfig(); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("config: %v", err)
+                return
+        }</span>
+        <span class="cov8" title="1">if err := viper.Unmarshal(&amp;config); err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("config: %v", err)
+                return
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+// GetRootPath
+func GetRootPath() (string, error) <span class="cov8" title="1">{
+        _, b, _, ok := runtime.Caller(0)
+        if !ok </span><span class="cov0" title="0">{
+                return "", os.ErrNotExist
+        }</span>
+
+        <span class="cov8" title="1">currDir := filepath.Dir(b)
+        for </span><span class="cov8" title="1">{
+                if PathExists(filepath.Join(currDir, "go.mod")) </span><span class="cov8" title="1">{
+                        return currDir, nil
+                }</span>
+
+                <span class="cov8" title="1">parentDir := filepath.Dir(currDir)
+                if parentDir == currDir </span><span class="cov0" title="0">{
+                        break</span>
+                }
+                <span class="cov8" title="1">currDir = parentDir</span>
+        }
+        <span class="cov0" title="0">return "", os.ErrNotExist</span>
+}
+
+// PathExists
+func PathExists(path string) bool <span class="cov8" title="1">{
+        _, err := os.Stat(path)
+        return !os.IsNotExist(err)
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strconv"
+        "tezos-delegation-service/internal/api"
+        "tezos-delegation-service/internal/db"
+
+        "github.com/gin-gonic/gin"
+)
+
+// Handler handles HTTP requests for delegations.
+type Handler struct {
+        db db.Querier
+}
+
+// NewHandler creates a new Handler with the provided database querier.
+func NewHandler(db db.Querier) *Handler <span class="cov8" title="1">{
+        return &amp;Handler{db: db}
+}</span>
+
+// GetDelegations handles the request to get delegations for a specific year.
+func (h *Handler) GetXtzDelegations(c *gin.Context, delegationsParams api.GetXtzDelegationsParams) <span class="cov8" title="1">{
+        year := c.Query("year")
+
+        // validator will intercept bad requests and yearInt will fallback to default value : 0
+        yearInt, _ := strconv.Atoi(year)
+
+        // Fetch delegations from the database for the given year.
+        delegations, err := h.db.GetDelegationsByYear(c, yearInt)
+        if err != nil </span><span class="cov0" title="0">{
+                c.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "error": "failed to fetch delegations"})
+                return
+        }</span>
+
+        // Respond with the fetched delegations.
+        <span class="cov8" title="1">c.JSON(http.StatusOK, gin.H{"code": http.StatusOK, "data": delegations})</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">// Package api provides primitives to interact with the openapi HTTP API.
+//
+// Code generated by github.com/deepmap/oapi-codegen/v2 version v2.2.0 DO NOT EDIT.
+package api
+
+import (
+        "bytes"
+        "compress/gzip"
+        "encoding/base64"
+        "fmt"
+        "net/http"
+        "net/url"
+        "path"
+        "strings"
+        "time"
+
+        "github.com/getkin/kin-openapi/openapi3"
+        "github.com/gin-gonic/gin"
+        "github.com/oapi-codegen/runtime"
+)
+
+// Delegation defines model for Delegation.
+type Delegation struct {
+        Amount    *int64     `json:"amount,omitempty"`
+        Delegator *string    `json:"delegator,omitempty"`
+        Level     *int64     `json:"level,omitempty"`
+        Timestamp *time.Time `json:"timestamp,omitempty"`
+}
+
+// GetXtzDelegationsParams defines parameters for GetXtzDelegations.
+type GetXtzDelegationsParams struct {
+        // Year Optional query parameter to filter results by year. Must be in the format YYYY and start with "20".
+        Year *string `form:"year,omitempty" json:"year,omitempty"`
+
+        // Page Page number for pagination. Defaults to 1 if not specified.
+        Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+        // PageSize Number of results per page. Defaults to 10 if not specified.
+        PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+}
+
+// ServerInterface represents all server handlers.
+type ServerInterface interface {
+        // Get Delegations
+        // (GET /xtz/delegations)
+        GetXtzDelegations(c *gin.Context, params GetXtzDelegationsParams)
+}
+
+// ServerInterfaceWrapper converts contexts to parameters.
+type ServerInterfaceWrapper struct {
+        Handler            ServerInterface
+        HandlerMiddlewares []MiddlewareFunc
+        ErrorHandler       func(*gin.Context, error, int)
+}
+
+type MiddlewareFunc func(c *gin.Context)
+
+// GetXtzDelegations operation middleware
+func (siw *ServerInterfaceWrapper) GetXtzDelegations(c *gin.Context) <span class="cov0" title="0">{
+
+        var err error
+
+        // Parameter object where we will unmarshal all parameters from the context
+        var params GetXtzDelegationsParams
+
+        // ------------- Optional query parameter "year" -------------
+
+        err = runtime.BindQueryParameter("form", true, false, "year", c.Request.URL.Query(), &amp;params.Year)
+        if err != nil </span><span class="cov0" title="0">{
+                siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter year: %w", err), http.StatusBadRequest)
+                return
+        }</span>
+
+        // ------------- Optional query parameter "page" -------------
+
+        <span class="cov0" title="0">err = runtime.BindQueryParameter("form", true, false, "page", c.Request.URL.Query(), &amp;params.Page)
+        if err != nil </span><span class="cov0" title="0">{
+                siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter page: %w", err), http.StatusBadRequest)
+                return
+        }</span>
+
+        // ------------- Optional query parameter "pageSize" -------------
+
+        <span class="cov0" title="0">err = runtime.BindQueryParameter("form", true, false, "pageSize", c.Request.URL.Query(), &amp;params.PageSize)
+        if err != nil </span><span class="cov0" title="0">{
+                siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter pageSize: %w", err), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">for _, middleware := range siw.HandlerMiddlewares </span><span class="cov0" title="0">{
+                middleware(c)
+                if c.IsAborted() </span><span class="cov0" title="0">{
+                        return
+                }</span>
+        }
+
+        <span class="cov0" title="0">siw.Handler.GetXtzDelegations(c, params)</span>
+}
+
+// GinServerOptions provides options for the Gin server.
+type GinServerOptions struct {
+        BaseURL      string
+        Middlewares  []MiddlewareFunc
+        ErrorHandler func(*gin.Context, error, int)
+}
+
+// RegisterHandlers creates http.Handler with routing matching OpenAPI spec.
+func RegisterHandlers(router gin.IRouter, si ServerInterface) <span class="cov8" title="1">{
+        RegisterHandlersWithOptions(router, si, GinServerOptions{})
+}</span>
+
+// RegisterHandlersWithOptions creates http.Handler with additional options
+func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options GinServerOptions) <span class="cov8" title="1">{
+        errorHandler := options.ErrorHandler
+        if errorHandler == nil </span><span class="cov8" title="1">{
+                errorHandler = func(c *gin.Context, err error, statusCode int) </span><span class="cov0" title="0">{
+                        c.JSON(statusCode, gin.H{"msg": err.Error()})
+                }</span>
+        }
+
+        <span class="cov8" title="1">wrapper := ServerInterfaceWrapper{
+                Handler:            si,
+                HandlerMiddlewares: options.Middlewares,
+                ErrorHandler:       errorHandler,
+        }
+
+        router.GET(options.BaseURL+"/xtz/delegations", wrapper.GetXtzDelegations)</span>
+}
+
+// Base64 encoded, gzipped, json marshaled Swagger object
+var swaggerSpec = []string{
+
+        "H4sIAAAAAAAC/5RUTW/bMAz9KwTXo5s43gcw3wYEGHbYB9AdFrQdwNi0o8L6mMR0dQL/90FyFydtA2wn",
+        "UyT19Pispz1WVjtr2EjAco+h2rCmFC6545ZEWRNXzlvHXhSnGmm7NRKjxnpNgiUqI+/eYIbSOx6X3LLH",
+        "IcN6BLI+9j+Wg3hl2ljt+J67f0QSpTkIaXfSX5PwZSxNe/7CD4eMXd9xJTjElDKNTVyUdLH2nXc2wDQv",
+        "XLG/V1XEu2cfkgK4mOWzPJKwjg05hSW+TqkMHckmyTJ/kN28PuCkXMtJp6heSn6qscSPLD9ktzzqjCie",
+        "NAv7gOX1HmsOlVdu1B+/poA6+LVl38OhF8RCo7oYeQ7bTgKse+iZ/Aw+b4PAmkEZkA3DqBesVqsVkKkh",
+        "CHmB30o2cINFfoMzjNJgiekMzNCQjvJENMwer0achR9Iu6RckRfFKICwj1t/Fvl1fvn+dl8MFy/9jqdz",
+        "faOWwWz1mn0kCI5aZZIkM1hyQ2kisbAA1YCxAsFxpRrF9Tm2jlo+YVuPMFguson54vn1ek7uy8jLNgdt",
+        "HSeK/IRc/l/srtTuHMO3xxTzFzjeZug5OGvCaMQiz+OnskZ4NCQ516kqSTi/C6N5p6NObVyTpKwS1ilx",
+        "4bnBEl/Np1dh/vgkzI/eg8lW5D3153x2quYH6FSQqOaxQ2Jf2GpNvh99AcuT6jD8CQAA///O9q/KowQA",
+        "AA==",
+}
+
+// GetSwagger returns the content of the embedded swagger specification file
+// or error if failed to decode
+func decodeSpec() ([]byte, error) <span class="cov8" title="1">{
+        zipped, err := base64.StdEncoding.DecodeString(strings.Join(swaggerSpec, ""))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error base64 decoding spec: %w", err)
+        }</span>
+        <span class="cov8" title="1">zr, err := gzip.NewReader(bytes.NewReader(zipped))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error decompressing spec: %w", err)
+        }</span>
+        <span class="cov8" title="1">var buf bytes.Buffer
+        _, err = buf.ReadFrom(zr)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error decompressing spec: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return buf.Bytes(), nil</span>
+}
+
+var rawSpec = decodeSpecCached()
+
+// a naive cached of a decoded swagger spec
+func decodeSpecCached() func() ([]byte, error) <span class="cov8" title="1">{
+        data, err := decodeSpec()
+        return func() ([]byte, error) </span><span class="cov8" title="1">{
+                return data, err
+        }</span>
+}
+
+// Constructs a synthetic filesystem for resolving external references when loading openapi specifications.
+func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) <span class="cov8" title="1">{
+        res := make(map[string]func() ([]byte, error))
+        if len(pathToFile) &gt; 0 </span><span class="cov0" title="0">{
+                res[pathToFile] = rawSpec
+        }</span>
+
+        <span class="cov8" title="1">return res</span>
+}
+
+// GetSwagger returns the Swagger specification corresponding to the generated code
+// in this file. The external references of Swagger specification are resolved.
+// The logic of resolving external references is tightly connected to "import-mapping" feature.
+// Externally referenced files must be embedded in the corresponding golang packages.
+// Urls can be supported but this task was out of the scope.
+func GetSwagger() (swagger *openapi3.T, err error) <span class="cov8" title="1">{
+        resolvePath := PathToRawSpec("")
+
+        loader := openapi3.NewLoader()
+        loader.IsExternalRefsAllowed = true
+        loader.ReadFromURIFunc = func(loader *openapi3.Loader, url *url.URL) ([]byte, error) </span><span class="cov0" title="0">{
+                pathToFile := url.String()
+                pathToFile = path.Clean(pathToFile)
+                getSpec, ok := resolvePath[pathToFile]
+                if !ok </span><span class="cov0" title="0">{
+                        err1 := fmt.Errorf("path not found: %s", pathToFile)
+                        return nil, err1
+                }</span>
+                <span class="cov0" title="0">return getSpec()</span>
+        }
+        <span class="cov8" title="1">var specData []byte
+        specData, err = rawSpec()
+        if err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov8" title="1">swagger, err = loader.LoadFromData(specData)
+        if err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package router
+
+import (
+        "tezos-delegation-service/config"
+        "tezos-delegation-service/internal/api"
+        "tezos-delegation-service/internal/api/handlers"
+        "tezos-delegation-service/internal/middleware"
+        "tezos-delegation-service/logger"
+
+        pagination "github.com/webstradev/gin-pagination"
+
+        oapiMiddleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
+
+        "github.com/gin-gonic/gin"
+)
+
+func RegisterRoutes(cfg *config.Config, r *gin.Engine, handler *handlers.Handler) <span class="cov8" title="1">{
+        // middlewares
+        r.Use(gin.Recovery())
+        r.Use(middleware.LoggerMiddleware(logger.NewLogger()))
+        r.Use(middleware.NewCors().Middleware())
+        r.Use(middleware.NewRateLimiter(cfg.RateLimit).Middleware())
+
+        paginator := pagination.New("page", "rowsPerPage", "1", "15", 5, 150)
+        r.Use(paginator)
+
+        // openapi specs
+        swagger, _ := api.GetSwagger()
+
+        // validator
+        r.Use(oapiMiddleware.OapiRequestValidator(swagger))
+
+        api.RegisterHandlers(r, handler)
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package server
+
+import (
+        "fmt"
+        "net/http"
+        "time"
+
+        "tezos-delegation-service/config"
+        "tezos-delegation-service/internal/api/handlers"
+        "tezos-delegation-service/internal/api/router"
+
+        "github.com/gin-gonic/gin"
+)
+
+type Server struct {
+        Cfg    *config.Config
+        engine *gin.Engine
+}
+
+func NewServer(cfg *config.Config, handler *handlers.Handler) *http.Server <span class="cov8" title="1">{
+        engine := gin.New()
+        router.RegisterRoutes(cfg, engine, handler)
+
+        srv := &amp;http.Server{
+                Addr:           fmt.Sprintf(":%s", cfg.Port),
+                Handler:        engine,
+                ReadTimeout:    10 * time.Second,
+                WriteTimeout:   10 * time.Second,
+                MaxHeaderBytes: 1 &lt;&lt; 20,
+        }
+        return srv
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package app
+
+import (
+        "context"
+        "net/http"
+        "tezos-delegation-service/config"
+        "tezos-delegation-service/internal/api/handlers"
+        "tezos-delegation-service/internal/api/server"
+        "tezos-delegation-service/internal/db"
+        "tezos-delegation-service/internal/poller"
+        "tezos-delegation-service/logger"
+
+        "go.uber.org/fx"
+)
+
+// NewApp creates and returns a new fx.App instance with all necessary components
+// provided and lifecycle hooks registered.
+func NewApp() *fx.App <span class="cov0" title="0">{
+        return fx.New(
+                fx.Provide(
+                        config.LoadConfig,   // Provide configuration
+                        db.NewDatabase,      // Provide database connection
+                        server.NewServer,    // Provide HTTP server
+                        handlers.NewHandler, // Provide HTTP handlers
+                        poller.NewPoller,    // Provide polling service
+                        logger.NewLogger,    // Provide logger
+                ),
+                fx.Invoke(
+                        registerHooks, // Register lifecycle hooks for server and poller
+                        startPoller,
+                ),
+        )
+}</span>
+
+// registerHooks registers the hooks for starting and stopping the HTTP server.
+func registerHooks(lifecycle fx.Lifecycle, server *http.Server, zeroLogger *logger.Logger) <span class="cov0" title="0">{
+        lifecycle.Append(fx.Hook{
+                OnStart: func(ctx context.Context) error </span><span class="cov0" title="0">{
+                        zeroLogger.Log.Info().Msg("Starting HTTP server")
+
+                        go func() </span><span class="cov0" title="0">{
+                                // Start the HTTP server in a separate goroutine
+                                if err := server.ListenAndServe(); err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+                                        zeroLogger.Log.Fatal().Err(err).Msg("Failed to start HTTP server")
+                                }</span>
+                        }()
+                        <span class="cov0" title="0">return nil</span>
+                },
+                OnStop: func(ctx context.Context) error <span class="cov0" title="0">{
+                        zeroLogger.Log.Info().Msg("Stopping HTTP server")
+                        return server.Shutdown(ctx)
+                }</span>,
+        })
+}
+
+// startPoller registers the hooks for starting and stopping the poller service.
+func startPoller(p *poller.Poller, lifecycle fx.Lifecycle, zeroLogger *logger.Logger) <span class="cov0" title="0">{
+        lifecycle.Append(fx.Hook{
+                OnStart: func(ctx context.Context) error </span><span class="cov0" title="0">{
+                        zeroLogger.Log.Info().Msg("Starting Poller")
+
+                        go p.StartPolling(ctx)
+                        return nil
+                }</span>,
+                OnStop: func(ctx context.Context) error <span class="cov0" title="0">{
+                        zeroLogger.Log.Info().Msg("Stopping Poller")
+                        // No specific stop logic needed for Poller in this example
+                        return nil
+                }</span>,
+        })
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.26.0
+
+package db
+
+import (
+        "context"
+
+        "github.com/jackc/pgconn"
+        "github.com/jackc/pgx/v4"
+)
+
+type DBTX interface {
+        Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+        Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+        QueryRow(context.Context, string, ...interface{}) pgx.Row
+}
+
+func New(db DBTX) *Queries <span class="cov8" title="1">{
+        return &amp;Queries{db: db}
+}</span>
+
+type Queries struct {
+        db DBTX
+}
+
+func (q *Queries) WithTx(tx pgx.Tx) *Queries <span class="cov0" title="0">{
+        return &amp;Queries{
+                db: tx,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package db
+
+import (
+        "context"
+        "fmt"
+        "log"
+
+        "tezos-delegation-service/config"
+
+        _ "github.com/golang-migrate/migrate/v4/database/postgres" // Import database migration driver
+        _ "github.com/golang-migrate/migrate/v4/source/file"       // Import file source for migrations
+        "github.com/jackc/pgx/v4"
+        "github.com/jackc/pgx/v4/pgxpool"
+)
+
+// PgQueries wraps Queries and provides a connection pool for PostgreSQL operations
+type PgQueries struct {
+        *Queries               // Embedded Queries type
+        pool     *pgxpool.Pool // PostgreSQL connection pool
+}
+
+// NewDatabase initializes a new PgQueries instance with a connection pool
+func NewDatabase(cfg *config.Config) Querier <span class="cov8" title="1">{
+        // Build the Data Source Name (DSN) for PostgreSQL connection
+        dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+                cfg.DBUsername, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+
+        // Create a new connection pool
+        pool, err := pgxpool.Connect(context.Background(), dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Unable to connect to database: %v\n", err)
+        }</span>
+
+        <span class="cov8" title="1">return PgQueries{
+                Queries: New(pool), // Initialize Queries with the connection pool
+                pool:    pool,      // Store the connection pool
+        }</span>
+}
+
+// Connect establishes a connection pool and returns it
+func Connect(cfg *config.Config) (*pgxpool.Pool, error) <span class="cov8" title="1">{
+        // Build the Data Source Name (DSN) for PostgreSQL connection
+        dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+                cfg.DBUsername, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+
+        // Create a new connection pool
+        pool, err := pgxpool.Connect(context.Background(), dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return pool, nil</span>
+}
+
+// InsertDelegationsBatch inserts a batch of delegations into the database
+func (q PgQueries) InsertDelegationsBatch(ctx context.Context, delegations []Delegation) error <span class="cov8" title="1">{
+        batch := &amp;pgx.Batch{}
+        for _, delegation := range delegations </span><span class="cov8" title="1">{
+                batch.Queue(
+                        `INSERT INTO delegations (id, delegator, timestamp, amount, level)
+                        VALUES ($1, $2, $3, $4, $5)
+                        ON CONFLICT (id, delegator, timestamp, amount, level) DO NOTHING`,
+                        delegation.ID, delegation.Delegator, delegation.Timestamp, delegation.Amount, delegation.Level,
+                )
+        }</span>
+
+        // Send the batch to the database
+        <span class="cov8" title="1">br := q.pool.SendBatch(ctx, batch)
+        defer br.Close()
+
+        // Execute each query in the batch
+        for range delegations </span><span class="cov8" title="1">{
+                if _, err := br.Exec(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetDelegationsByYear retrieves delegations for a specific year from the database
+func (q PgQueries) GetDelegationsByYear(ctx context.Context, year int) ([]*Delegation, error) <span class="cov8" title="1">{
+        var rows pgx.Rows
+        var err error
+        if year == 0 </span><span class="cov0" title="0">{
+                rows, err = q.pool.Query(ctx, `
+                SELECT *
+                FROM delegations
+                ORDER BY timestamp DESC
+        `)
+        }</span> else<span class="cov8" title="1"> {
+                rows, err = q.pool.Query(ctx, `
+                SELECT id, delegator, timestamp, amount, level
+                FROM delegations
+                WHERE EXTRACT(YEAR FROM timestamp) = $1
+                ORDER BY timestamp DESC
+        `, year)
+        }</span>
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var delegations []*Delegation
+        for rows.Next() </span><span class="cov8" title="1">{
+                var d Delegation
+                if err := rows.Scan(&amp;d.ID, &amp;d.Delegator, &amp;d.Timestamp, &amp;d.Amount, &amp;d.Level); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">delegations = append(delegations, &amp;d)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return delegations, nil</span>
+}
+
+// DeleteDelegationsBatch deletes a batch of delegations from the database
+func (q PgQueries) DeleteDelegationsBatch(ctx context.Context, delegations []Delegation) error <span class="cov8" title="1">{
+        batch := &amp;pgx.Batch{}
+        for _, delegation := range delegations </span><span class="cov8" title="1">{
+                batch.Queue("DELETE FROM delegations WHERE id = $1", delegation.ID)
+        }</span>
+
+        // Send the batch to the database
+        <span class="cov8" title="1">br := q.pool.SendBatch(ctx, batch)
+        defer br.Close()
+
+        // Execute each query in the batch
+        for range delegations </span><span class="cov8" title="1">{
+                if _, err := br.Exec(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.26.0
+// source: queries.sql
+
+package db
+
+import (
+        "context"
+        "time"
+)
+
+const CreateDelegation = `-- name: CreateDelegation :one
+INSERT INTO delegations (delegator, timestamp, amount, level)
+VALUES ($1, $2, $3, $4)
+RETURNING delegator, timestamp, amount, level
+`
+
+type CreateDelegationParams struct {
+        Delegator string    `json:"delegator"`
+        Timestamp time.Time `json:"timestamp"`
+        Amount    int64     `json:"amount"`
+        Level     int64     `json:"level"`
+}
+
+type CreateDelegationRow struct {
+        Delegator string    `json:"delegator"`
+        Timestamp time.Time `json:"timestamp"`
+        Amount    int64     `json:"amount"`
+        Level     int64     `json:"level"`
+}
+
+func (q *Queries) CreateDelegation(ctx context.Context, arg CreateDelegationParams) (*CreateDelegationRow, error) <span class="cov0" title="0">{
+        row := q.db.QueryRow(ctx, CreateDelegation,
+                arg.Delegator,
+                arg.Timestamp,
+                arg.Amount,
+                arg.Level,
+        )
+        var i CreateDelegationRow
+        err := row.Scan(
+                &amp;i.Delegator,
+                &amp;i.Timestamp,
+                &amp;i.Amount,
+                &amp;i.Level,
+        )
+        return &amp;i, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package middleware
+
+import (
+        "github.com/afex/hystrix-go/hystrix"
+        "github.com/gin-gonic/gin"
+)
+
+type CircuitBreaker struct{}
+
+func NewCircuitBreaker() *CircuitBreaker <span class="cov0" title="0">{
+        return &amp;CircuitBreaker{}
+}</span>
+
+func (mw *CircuitBreaker) Middleware() gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                err := hystrix.Do("my_command", func() error </span><span class="cov0" title="0">{
+                        c.Next()
+                        if len(c.Errors) &gt; 0 </span><span class="cov0" title="0">{
+                                return c.Errors.Last()
+                        }</span>
+                        <span class="cov0" title="0">return nil</span>
+                }, nil)
+
+                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                        c.JSON(500, gin.H{"error": "service unavailable"})
+                        c.Abort()
+                }</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package middleware
+
+import (
+        "github.com/gin-gonic/gin"
+)
+
+type Cors struct{}
+
+func NewCors() *Cors <span class="cov8" title="1">{
+        return &amp;Cors{}
+}</span>
+
+func (r *Cors) Middleware() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                // Handle actual requests
+                c.Header("Access-Control-Allow-Origin", "*")
+                c.Header("Access-Control-Allow-Methods", "GET")
+                c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+                c.Header("Access-Control-Allow-Credentials", "true")
+
+                c.Next()
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package middleware
+
+import (
+        "tezos-delegation-service/logger"
+        "time"
+
+        "github.com/gin-gonic/gin"
+)
+
+func LoggerMiddleware(l *logger.Logger) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                start := time.Now()
+                c.Next()
+                duration := time.Since(start)
+
+                l.Log.Info().
+                        Int("status", c.Writer.Status()).
+                        Str("method", c.Request.Method).
+                        Str("path", c.Request.URL.Path).
+                        Str("ip", c.ClientIP()).
+                        Dur("duration(µs)", time.Duration(duration.Microseconds())).
+                        Msg("Request processed")
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package middleware
+
+import (
+        "github.com/gin-gonic/gin"
+        "go.uber.org/ratelimit"
+)
+
+type RateLimiter struct {
+        limiter ratelimit.Limiter
+}
+
+func NewRateLimiter(rate int) *RateLimiter <span class="cov8" title="1">{
+        return &amp;RateLimiter{
+                limiter: ratelimit.New(rate),
+        }
+}</span>
+
+func (mw *RateLimiter) Middleware() gin.HandlerFunc <span class="cov8" title="1">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                mw.limiter.Take()
+                c.Next()
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package middleware
+
+import (
+        "time"
+
+        "github.com/gin-gonic/gin"
+)
+
+type Retrier struct{}
+
+func NewRetrier() *Retrier <span class="cov0" title="0">{
+        return &amp;Retrier{}
+}</span>
+
+func (r *Retrier) RetryMiddleware(attempts int, sleep time.Duration) gin.HandlerFunc <span class="cov0" title="0">{
+        return func(c *gin.Context) </span><span class="cov0" title="0">{
+                for i := 0; ; i++ </span><span class="cov0" title="0">{
+                        c.Next()
+                        if len(c.Errors) == 0 </span><span class="cov0" title="0">{
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">if i &gt;= (attempts - 1) </span><span class="cov0" title="0">{
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">time.Sleep(sleep)</span>
+                }
+        }
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package parser
+
+import (
+        "errors"
+        "fmt"
+        "strconv"
+        "tezos-delegation-service/internal/db"
+        "time"
+)
+
+// Error messages
+var (
+        ErrInvalidIDType          = errors.New("invalid type for id")
+        ErrInvalidInt64Type       = errors.New("invalid type for int64")
+        ErrInvalidSenderType      = errors.New("invalid type for sender")
+        ErrMissingSenderAddress   = errors.New("missing sender address")
+        ErrInvalidTimestampFormat = errors.New("invalid timestamp format")
+        ErrMissingField           = errors.New("missing field")
+)
+
+func ParseID(id interface{}) (int64, error) <span class="cov8" title="1">{
+        switch v := id.(type) </span>{
+        case float64:<span class="cov8" title="1">
+                return int64(v), nil</span>
+        case string:<span class="cov8" title="1">
+                return strconv.ParseInt(v, 10, 64)</span>
+        case int, int32, int64:<span class="cov8" title="1">
+                return int64(v.(int)), nil</span>
+        case uint, uint32, uint64:<span class="cov8" title="1">
+                return int64(v.(uint64)), nil</span>
+        default:<span class="cov0" title="0">
+                return 0, fmt.Errorf("%w: %T", ErrInvalidIDType, id)</span>
+        }
+}
+
+func ParseInt64(val interface{}) (int64, error) <span class="cov8" title="1">{
+        switch v := val.(type) </span>{
+        case float64:<span class="cov8" title="1">
+                return int64(v), nil</span>
+        case string:<span class="cov8" title="1">
+                return strconv.ParseInt(v, 10, 64)</span>
+        case int, int32, int64:<span class="cov8" title="1">
+                return int64(v.(int)), nil</span>
+        case uint, uint32, uint64:<span class="cov8" title="1">
+                return int64(v.(uint64)), nil</span>
+        default:<span class="cov0" title="0">
+                return 0, fmt.Errorf("%w: %T", ErrInvalidInt64Type, val)</span>
+        }
+}
+
+func checkField(raw map[string]interface{}, key string) (interface{}, error) <span class="cov8" title="1">{
+        val, ok := raw[key]
+        if !ok </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("%w: %s", ErrMissingField, key)
+        }</span>
+        <span class="cov8" title="1">return val, nil</span>
+}
+
+func ParseDelegationParameters(raw map[string]interface{}) (*db.Delegation, error) <span class="cov8" title="1">{
+        idVal, err := checkField(raw, "id")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">id, err := ParseID(idVal)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">senderVal, err := checkField(raw, "sender")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">sender, ok := senderVal.(map[string]interface{})
+        if !ok </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("%w: %T", ErrInvalidSenderType, senderVal)
+        }</span>
+
+        <span class="cov8" title="1">delegator, ok := sender["address"].(string)
+        if !ok </span><span class="cov8" title="1">{
+                return nil, ErrMissingSenderAddress
+        }</span>
+
+        <span class="cov8" title="1">timestampVal, err := checkField(raw, "timestamp")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">timestampStr, ok := timestampVal.(string)
+        if !ok </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("%w: %T", ErrInvalidTimestampFormat, timestampVal)
+        }</span>
+        <span class="cov8" title="1">timestamp, err := time.Parse(time.RFC3339, timestampStr)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("%w: %s", ErrInvalidTimestampFormat, timestampStr)
+        }</span>
+
+        <span class="cov8" title="1">amountVal, err := checkField(raw, "amount")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">amount, err := ParseInt64(amountVal)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">levelVal, err := checkField(raw, "level")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">level, err := ParseInt64(levelVal)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">delegation := db.Delegation{
+                ID:        id,
+                Delegator: delegator,
+                Timestamp: timestamp,
+                Amount:    amount,
+                Level:     level,
+        }
+        return &amp;delegation, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package poller
+
+import (
+        "context"
+        "encoding/json"
+        "net/http"
+        "time"
+
+        "tezos-delegation-service/config"
+        "tezos-delegation-service/internal/db"
+        "tezos-delegation-service/internal/parser"
+        "tezos-delegation-service/logger"
+
+        "github.com/patrickmn/go-cache"
+)
+
+// Poller is responsible for polling the Tezos API and handling delegations.
+type Poller struct {
+        cfg        *config.Config // Configuration for the Poller
+        querier    db.Querier     // Database querier for interacting with the database
+        httpClient *http.Client   // HTTP client for making requests
+        cache      *cache.Cache   // Cache to store the last processed delegation ID
+        zeroLogger *logger.Logger // Logger for logging messages
+}
+
+// TempDelegation represents the structure of a delegation received from the API.
+type TempDelegation struct {
+        ID        json.RawMessage `json:"id"`
+        Delegator json.RawMessage `json:"delegator"`
+        Timestamp time.Time       `json:"timestamp"`
+        Amount    json.RawMessage `json:"amount"`
+        Level     json.RawMessage `json:"level"`
+}
+
+// NewPoller creates a new Poller instance with the given configuration and dependencies.
+func NewPoller(cfg *config.Config, dbQuerier db.Querier, zeroLog *logger.Logger) *Poller <span class="cov8" title="1">{
+        return &amp;Poller{
+                cfg:        cfg,
+                querier:    dbQuerier,
+                httpClient: &amp;http.Client{},
+                cache:      cache.New(5*time.Minute, 10*time.Minute),
+                zeroLogger: zeroLog,
+        }
+}</span>
+
+// StartPolling starts the polling process, which runs at intervals defined in the configuration.
+func (p *Poller) StartPolling(ctx context.Context) <span class="cov0" title="0">{
+        duration, err := time.ParseDuration(p.cfg.PollingInterval)
+        if err != nil </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Error().Msgf("Invalid polling interval duration: %v", err)
+                return
+        }</span>
+        <span class="cov0" title="0">ticker := time.NewTicker(duration)
+        defer ticker.Stop()
+
+        for </span><span class="cov0" title="0">{
+                select </span>{
+                case &lt;-ticker.C:<span class="cov0" title="0">
+                        p.FetchDelegations(ctx)</span>
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return</span>
+                }
+        }
+}
+
+// FetchDelegations fetches delegations from the API, processes them, and stores them in the database.
+func (p *Poller) FetchDelegations(ctx context.Context) <span class="cov0" title="0">{
+        resp, err := p.httpClient.Get(p.cfg.TezosAPIURL)
+        if err != nil </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Error().Msgf("Failed to fetch delegations: %v", err)
+                return
+        }</span>
+        <span class="cov0" title="0">defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Info().Msgf("Unexpected status code: %d", resp.StatusCode)
+                return
+        }</span>
+
+        <span class="cov0" title="0">var rawDelegations []map[string]interface{}
+        if err := json.NewDecoder(resp.Body).Decode(&amp;rawDelegations); err != nil </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Error().Msgf("Failed to decode delegations: %v", err)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if len(rawDelegations) == 0 </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        // Extract the ID of the last delegation in the response
+        <span class="cov0" title="0">lastDelegationID := rawDelegations[len(rawDelegations)-1]["id"]
+        lastDelegationIDStr, err := json.Marshal(lastDelegationID)
+        if err != nil </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Error().Msgf("Failed to marshal last delegation ID: %v", err)
+                return
+        }</span>
+
+        // Check if the last delegation ID is different from the cached one
+        <span class="cov0" title="0">cachedID, found := p.cache.Get("lastDelegationID")
+        if found &amp;&amp; string(cachedID.([]byte)) == string(lastDelegationIDStr) </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Info().Msg("No new delegations found. Skipping database update.")
+                return
+        }</span>
+
+        // Parse and store new delegations
+        <span class="cov0" title="0">var delegations []db.Delegation
+        for _, raw := range rawDelegations </span><span class="cov0" title="0">{
+                delegation, err := parser.ParseDelegationParameters(raw)
+                if err != nil </span><span class="cov0" title="0">{
+                        p.zeroLogger.Log.Error().Msgf("Failed to parse delegation: %v", err)
+                        return
+                }</span>
+                <span class="cov0" title="0">delegations = append(delegations, *delegation)</span>
+        }
+
+        // Insert the delegations into the database
+        <span class="cov0" title="0">err = p.querier.InsertDelegationsBatch(ctx, delegations)
+        if err != nil </span><span class="cov0" title="0">{
+                p.zeroLogger.Log.Error().Msgf("Failed to insert delegations batch: %v", err)
+                return
+        }</span>
+
+        // Update the cache with the new last delegation ID
+        <span class="cov0" title="0">p.cache.Set("lastDelegationID", lastDelegationIDStr, cache.DefaultExpiration)</span>
+}
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package logger
+
+import (
+        "os"
+        "time"
+
+        "github.com/rs/zerolog"
+)
+
+// Logger wraps the zerolog.Logger to provide a structured logging interface.
+type Logger struct {
+        Log zerolog.Logger
+}
+
+// NewLogger initializes and returns a new Logger instance with console output.
+func NewLogger() *Logger <span class="cov8" title="1">{
+        // Create a new zerolog logger with console writer for output.
+        logger := zerolog.New(zerolog.ConsoleWriter{
+                Out:        os.Stdout,    // Output logs to standard output.
+                TimeFormat: time.RFC3339, // Use RFC3339 format for timestamps.
+        }).
+                With().
+                Timestamp(). // Add timestamp to log entries.
+                Logger()
+
+        return &amp;Logger{Log: logger}
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

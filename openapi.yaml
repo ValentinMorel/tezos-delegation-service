@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: Tezos Delegation Service
+  version: 1.0.0
+paths:
+  /xtz/delegations:
+    get:
+      summary: Get Delegations
+      parameters:
+        - in: query
+          name: year
+          schema:
+            type: string
+            pattern: '^20[0-9]{2}$'
+            example: '2022'
+          description: Optional query parameter to filter results by year. Must be in the format YYYY and start with "20".  
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            example: 1
+          description: Page number for pagination. Defaults to 1 if not specified.
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 15
+            example: 10
+          description: Number of results per page. Defaults to 10 if not specified.
+      responses:
+        '200':
+          description: A list of delegations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Delegation'
+
+components:
+  schemas:
+    Delegation:
+      type: object
+      properties:
+        delegator:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        amount:
+          type: integer
+          format: int64
+        level:
+          type: integer
+          format: int64
