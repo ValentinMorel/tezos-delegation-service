@@ -15,7 +15,7 @@ down:
 
 
 test-db:
-	PGPASSWORD="password" psql -h localhost tezos -U username -p 5432  -c "CREATE DATABASE db_test" || exit 0
+	PGPASSWORD="password" psql -h localhost tezos -U username -p 5432  -c "CREATE DATABASE db_test"
 
 test-up:
 	PGPASSWORD="password" psql -h localhost db_test -U username -p 5432 -f db/migrations/000001_delegations.up.sql
@@ -27,7 +27,7 @@ run:
 	go run cmd/server/main.go
 
 generate: 
-	oapi-codegen --generate gin,spec --package api -o internal/api/openapi.gen.go openapi.yaml &&\
+	oapi-codegen --generate gin,models,spec --package api -o internal/api/openapi.gen.go openapi.yaml &&\
 	cd db && \
 	sqlc generate
 	
