@@ -128,11 +128,9 @@ go test ./...
 │   │   ├── querier.go
 │   │   └── queries.sql.go
 │   ├── middleware
-│   │   ├── cache.go
 │   │   ├── circuitbreaker.go
 │   │   ├── cors.go
 │   │   ├── logger.go
-│   │   ├── manager.go
 │   │   ├── ratelimiter.go
 │   │   └── retrier.go
 │   ├── parser
